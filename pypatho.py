@@ -5,8 +5,11 @@ import tornado.httpserver
 
 from StringIO import StringIO
 
+import datetime
 import os
 import sqlite3
+import imghdr
+from hashlib import md5
 
 #Internal Functions Come Now...
 import opts
@@ -14,7 +17,7 @@ import opts
 #Functions
 
 def isAlreadyThere(filehash):
-    cur = db.cursor()
+    cur = self.db.cursor()
     cur.execute("SELECT * FROM files WHERE hash=:hash and written=1",
         {"hash": filehash})
     res=cur.fetchone()
@@ -35,23 +38,57 @@ class OjeteHandler(BaseHandler):
         self.write("Ojete, world")
 
 class HashHandler(BaseHandler):
-    def get(self):
+    def get(self, input):
         cur = self.db.cursor()
         cur.execute("SELECT * FROM files WHERE hash=:hash and written=1",
-            {"hash": options.hashdemo})
+            {"hash": input})
         res=cur.fetchone()
         if res==None:
-            self.write('0') 
+            self.write('NO') 
         else:
-            self.write('1')
+            self.write('OK')
 
+class PostFileHandler(BaseHandler):
+    def post(self):
+        apikey = self.get_argument('apikey')
+        file1 = self.request.files['file1'][0]
+        original_fname = file1['filename']
+        hashresult=md5(file1['body']).hexdigest()
+        if imghdr.what(file1,file1['body']) != 'jpeg':
+            self.write('No JPEG! BAD!')
+        else:
+            self.write('JPEG! Very Good!' + hashresult)
+            directory = "uploads/original/" + hashresult[0:3]
+            if not os.path.exists(directory):
+                os.makedirs(directory)
+            output = open(directory + '/' + hashresult + '.jpg', 'wb')
+            output.write(file1['body'])
+            output.close()
+            cur = self.db.cursor()
+            cur.execute("INSERT OR REPLACE INTO files VALUES(?,?,1)", (hashresult, datetime.datetime.now()));
+            self.db.commit()
+
+class GetFileHandler(BaseHandler):
+    def get(self, input):
+        path = options.uploadpath + '/original'
+        fullpath = path + '/' + input[0:3] + '/' + input + '.jpg'
+        if os.path.exists(fullpath):
+            File = open(fullpath,"r")
+            self.set_header("Content-Type", 'image/jpeg')
+            self.write(File.read())
+            File.close()
+        else:
+            self.write('MAAAAL')
 
 #App
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", OjeteHandler),
-            (r"/si", HashHandler),
+            (r"/api/v1/hash/check/([a-fA-F\d]{32})", HashHandler),
+            #(r"/api/hash/check/(\w+)", HashHandler),
+            (r"/api/v1/file/post", PostFileHandler),
+            (r"/api/v1/file/get/([a-fA-F\d]{32}).jpg", GetFileHandler),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
