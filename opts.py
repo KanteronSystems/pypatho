@@ -9,3 +9,4 @@ define("hashdemo", default="78190a01d271953214c57f55c47f2749", help="File hash t
 
 #Rutas
 define("uploadpath", default="uploads", help="Where original file will be uploaded")
+define("processedpath", default="processed", help="Where processed files will be stored")
