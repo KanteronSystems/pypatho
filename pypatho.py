@@ -116,12 +116,26 @@ class ProcessFileHandler(BaseHandler):
         else:
             self.write('VAYA HOMBRE! ' + fullpath)
 
+class ListImagesHandler(BaseHandler):
+    def get(self):
+        #Vamos a ver ficheros de la base de datos"
+        cur = self.db.cursor()
+        cur.execute("SELECT hash,date FROM files WHERE written=1 LIMIT 50")
+        res=cur.fetchall()
+        self.render(
+            "list.html",
+            title = "Pypatho - Processed file list",
+            # header = "Processed files",
+            images = res
+        )
+
 
 #App
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", HomeHandler),
+            (r"/list", ListImagesHandler),
             (r"/api/v1/hash/check/([a-fA-F\d]{32})", HashHandler),
             #(r"/api/hash/check/(\w+)", HashHandler),
             (r"/api/v1/file/post", PostFileHandler),
