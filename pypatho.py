@@ -74,18 +74,18 @@ class PostFileHandler(BaseHandler):
             #UNO
             if not os.path.exists(options.processedpath + '/1/' + hashresult[0:3]):
                 os.makedirs(options.processedpath + '/1/' + hashresult[0:3])
-            imagepro = processors.processHED(image, 1)
-            io.imsave(options.processedpath + '/1/' +  hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
+                imagepro = processors.processHED(image, 1)
+                io.imsave(options.processedpath + '/1/' +  hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
             #DOS
             if not os.path.exists(options.processedpath + '/2/' + hashresult[0:3]):
                 os.makedirs(options.processedpath + '/2/' + hashresult[0:3])
-            imagepro = processors.processHED(image, 2)
-            io.imsave(options.processedpath + '/2/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
+                imagepro = processors.processHED(image, 2)
+                io.imsave(options.processedpath + '/2/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
             #TRES
             if not os.path.exists(options.processedpath + '/3/' + hashresult[0:3]):
                 os.makedirs(options.processedpath + '/3/' + hashresult[0:3])
-            imagepro = processors.processHED(image, 3)
-            io.imsave(options.processedpath + '/3/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
+                imagepro = processors.processHED(image, 3)
+                io.imsave(options.processedpath + '/3/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
             #OMG, no tengo perdon de $DEITY
             cur = self.db.cursor()
             cur.execute("INSERT OR REPLACE INTO files VALUES(?,?,1)", (hashresult, datetime.datetime.now()));
