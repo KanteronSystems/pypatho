@@ -2,16 +2,25 @@
 
     <head>
         <title>Probando</title>
+        <link rel="stylesheet" href="/static/css/tables.css">
     </head>
 
     <body>
-        <table style="width:100%">
-            {% for image in images %}
+        <table class="pure-table">
+            <thead>
                 <tr>
-                    <td>{{ image[0] }}</td>
-                    <td>{{ image[1] }}</td>
+                    <th>Hash</th>
+                    <th>Date</th>
                 </tr>
-            {% end %}
+            </thead>
+            <tbody>
+                {% for image in images %}
+                    <tr>
+                        <td>{{ image[0] }}</td>
+                        <td>{{ image[1] }}</td>
+                    </tr>
+                {% end %}
+            </tbody>
         </table>
     </body
 
