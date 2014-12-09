@@ -1,3 +1,9 @@
+#scikit dependencies
+six
+numpy
+scipy
+
+matplotlib
 tornado
 scikit-image
 pillow
