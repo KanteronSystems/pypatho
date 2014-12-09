@@ -1,3 +1,6 @@
+# PyCharm project files
+.idea/
+
 # Temporal, uploads and processed pypatho files
 processed/
 uploads/
