@@ -40,7 +40,7 @@ class BaseHandler(tornado.web.RequestHandler):
 
 class HomeHandler(BaseHandler):
     def get(self):
-        self.write("Hello, world")
+        self.render("index.html")
 
 
 class HashHandler(BaseHandler):

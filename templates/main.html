@@ -2,11 +2,21 @@
     <head>
         <title>Probando</title>
         <link rel="stylesheet" href="/static/css/tables.css">
+        <link rel="stylesheet" href="/static/css/menus.css">
     </head>
     <body>
         <header>
             {% block header %}{% end %}
         </header>
+
+        <nav>
+            <div class="pure-menu pure-menu-open pure-menu-horizontal">
+                <ul>
+                    <li><a href="/">Home</a></li>
+                    <li><a href="/list">List files</a></li>
+                </ul>
+            </div>
+        </nav>
 
         <content>
             {% block body %}{% end %}
