@@ -1,11 +1,10 @@
-from tornado.options import define, options
+from tornado.options import options
 import tornado.web
 import tornado.gen
 import tornado.httpserver
+import tornado.ioloop
 
 from skimage import io
-
-from StringIO import StringIO
 
 import datetime
 import os
@@ -13,33 +12,36 @@ import sqlite3
 import imghdr
 from hashlib import md5
 
-#Internal Functions Come Now...
+# Internal Functions Come Now...
 import opts
 
-#How about some processing algorithms?
+# How about some processing algorithms?
 import processors
 
-#Functions
 
+# Functions
 def isAlreadyThere(filehash):
     cur = self.db.cursor()
     cur.execute("SELECT * FROM files WHERE hash=:hash and written=1",
         {"hash": filehash})
-    res=cur.fetchone()
-    if res==None:
+    res = cur.fetchone()
+    if res is not None:
         return 0
     else:
         return 1
 
-#Handlers
+
+# Handlers
 class BaseHandler(tornado.web.RequestHandler):
     @property
     def db(self):
         return self.application.db
 
+
 class HomeHandler(BaseHandler):
     def get(self):
         self.write("Hello, world")
+
 
 class HashHandler(BaseHandler):
     def get(self, input):
@@ -47,61 +49,65 @@ class HashHandler(BaseHandler):
         cur.execute("SELECT * FROM files WHERE hash=:hash and written=1",
             {"hash": input})
         res=cur.fetchone()
-        if res==None:
+        if res is not None:
             self.write('NO') 
         else:
             self.write('OK')
 
+
 class PostFileHandler(BaseHandler):
     def post(self):
-        apikey = self.get_argument('apikey')
+        # Pending use of apikey
+        # apikey = self.get_argument('apikey')
         file1 = self.request.files['file1'][0]
-        original_fname = file1['filename']
-        hashresult=md5(file1['body']).hexdigest()
+        # original_fname = file1['filename']
+        hashresult = md5(file1['body']).hexdigest()
         if imghdr.what(file1,file1['body']) != 'jpeg':
             self.write('No JPEG! BAD!')
         else:
             self.write('JPEG! Very Good!' + hashresult)
             path = options.uploadpath + "/original/" + hashresult[0:3]
-            #TODO Integrar el chequeo de directorio al arranque? Mantenerlo 'PORSIACA'?
+            # TODO Integrar el chequeo de directorio al arranque? Mantenerlo 'PORSIACA'?
             if not os.path.exists(path):
                 os.makedirs(path)
             output = open(path + '/' + hashresult + '.jpg', 'wb')
             output.write(file1['body'])
             output.close()
-            #Procesemos
+            # Procesemos
             image = io.imread(path + '/' + hashresult + '.jpg')
-            #UNO
+            # UNO
             if not os.path.exists(options.processedpath + '/1/' + hashresult[0:3]):
                 os.makedirs(options.processedpath + '/1/' + hashresult[0:3])
-                imagepro = processors.processHED(image, 1)
-                io.imsave(options.processedpath + '/1/' +  hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            #DOS
+                imagepro = processors.processhed(image, 1)
+                io.imsave(options.processedpath + '/1/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
+            # DOS
             if not os.path.exists(options.processedpath + '/2/' + hashresult[0:3]):
                 os.makedirs(options.processedpath + '/2/' + hashresult[0:3])
-                imagepro = processors.processHED(image, 2)
+                imagepro = processors.processhed(image, 2)
                 io.imsave(options.processedpath + '/2/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            #TRES
+            # TRES
             if not os.path.exists(options.processedpath + '/3/' + hashresult[0:3]):
                 os.makedirs(options.processedpath + '/3/' + hashresult[0:3])
-                imagepro = processors.processHED(image, 3)
+                imagepro = processors.processhed(image, 3)
                 io.imsave(options.processedpath + '/3/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            #OMG, no tengo perdon de $DEITY
+            # OMG, no tengo perdon de $DEITY
             cur = self.db.cursor()
             cur.execute("INSERT OR REPLACE INTO files VALUES(?,?,1)", (hashresult, datetime.datetime.now()));
             self.db.commit()
+
 
 class GetFileHandler(BaseHandler):
     def get(self, input):
         path = options.uploadpath + '/original'
         fullpath = path + '/' + input[0:3] + '/' + input + '.jpg'
         if os.path.exists(fullpath):
-            File = open(fullpath,"r")
+            imagefile = open(fullpath,"r")
             self.set_header("Content-Type", 'image/jpeg')
-            self.write(File.read())
-            File.close()
+            self.write(imagefile.read())
+            imagefile.close()
         else:
             self.write('MAAAAL')
+
 
 class ProcessFileHandler(BaseHandler):
     def get(self, input):
@@ -109,35 +115,36 @@ class ProcessFileHandler(BaseHandler):
         path = options.processedpath + '/' + str(algo) 
         fullpath = path + '/' + input[0:3] + '/' + input + '.jpg'
         if os.path.exists(fullpath):
-            File = open(fullpath,"r")
+            imagefile = open(fullpath, "r")
             self.set_header("Content-Type", 'image/jpeg')
-            self.write(File.read())
-            File.close()
+            self.write(imagefile.read())
+            imagefile.close()
         else:
             self.write('VAYA HOMBRE! ' + fullpath)
 
+
 class ListImagesHandler(BaseHandler):
     def get(self):
-        #Vamos a ver ficheros de la base de datos"
+        # Vamos a ver ficheros de la base de datos"
         cur = self.db.cursor()
         cur.execute("SELECT hash,date FROM files WHERE written=1 LIMIT 50")
-        res=cur.fetchall()
+        res = cur.fetchall()
         self.render(
             "list.html",
-            title = "Pypatho - Processed file list",
+            title="Pypatho - Processed file list",
             # header = "Processed files",
-            images = res
+            images=res
         )
 
 
-#App
+# App
 class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", HomeHandler),
             (r"/list", ListImagesHandler),
             (r"/api/v1/hash/check/([a-fA-F\d]{32})", HashHandler),
-            #(r"/api/hash/check/(\w+)", HashHandler),
+            # (r"/api/hash/check/(\w+)", HashHandler),
             (r"/api/v1/file/post", PostFileHandler),
             (r"/api/v1/file/get/([a-fA-F\d]{32}).jpg", GetFileHandler),
             (r"/api/v1/file/process/1/([a-fA-F\d]{32}).jpg", ProcessFileHandler),
@@ -150,11 +157,12 @@ class Application(tornado.web.Application):
 
         self.db = sqlite3.connect(options.database)
 
+
 def main():
     tornado.options.parse_command_line()
     print 'Serving on ' + str(options.port) + '...'
     print 'Connecting to database ' + options.database
-    #TODO Chequear que todas las rutas existen
+    # TODO Chequear que todas las rutas existen
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(options.port)
     tornado.ioloop.IOLoop.instance().start()
