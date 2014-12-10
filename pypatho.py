@@ -73,24 +73,6 @@ class PostFileHandler(BaseHandler):
             output = open(path + '/' + hashresult + '.jpg', 'wb')
             output.write(file1['body'])
             output.close()
-            # # Procesemos
-            # image = io.imread(path + '/' + hashresult + '.jpg')
-            # # UNO
-            # if not os.path.exists(options.processedpath + '/1/' + hashresult[0:3]):
-            #     os.makedirs(options.processedpath + '/1/' + hashresult[0:3])
-            #     imagepro = processors.processhed(image, 1)
-            #     io.imsave(options.processedpath + '/1/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            # # DOS
-            # if not os.path.exists(options.processedpath + '/2/' + hashresult[0:3]):
-            #     os.makedirs(options.processedpath + '/2/' + hashresult[0:3])
-            #     imagepro = processors.processhed(image, 2)
-            #     io.imsave(options.processedpath + '/2/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            # # TRES
-            # if not os.path.exists(options.processedpath + '/3/' + hashresult[0:3]):
-            #     os.makedirs(options.processedpath + '/3/' + hashresult[0:3])
-            #     imagepro = processors.processhed(image, 3)
-            #     io.imsave(options.processedpath + '/3/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            # # OMG, no tengo perdon de $DEITY
             cur = self.db.cursor()
             cur.execute("INSERT OR REPLACE INTO files VALUES(?,?,1)", (hashresult, datetime.datetime.now()));
             self.db.commit()
@@ -134,10 +116,13 @@ class ProcessFileHandler(BaseHandler):
 
 
 class ListImagesHandler(BaseHandler):
-    def get(self):
+    def get(self, page):
+        page = int(page) if page else '0'
+        pagination = 20
+        pagebegin = page * pagination
         # Vamos a ver ficheros de la base de datos"
         cur = self.db.cursor()
-        cur.execute("SELECT hash,date FROM files WHERE written=1 LIMIT 50")
+        cur.execute("SELECT hash,date FROM files WHERE written=1 LIMIT " + str(pagebegin) + "," + str(pagination))
         res = cur.fetchall()
         self.render(
             "list.html",
@@ -152,7 +137,7 @@ class Application(tornado.web.Application):
     def __init__(self):
         handlers = [
             (r"/", HomeHandler),
-            (r"/list", ListImagesHandler),
+            (r"/list(?:/([0-9]*))?", ListImagesHandler),
             (r"/api/v1/hash/check/([a-fA-F\d]{32})", HashHandler),
             # (r"/api/hash/check/(\w+)", HashHandler),
             (r"/api/v1/file/post", PostFileHandler),
