@@ -1,16 +1,18 @@
-<html>
+{% extends "main.html" %}
 
-    <head>
-        <title>Probando</title>
-        <link rel="stylesheet" href="/static/css/tables.css">
-    </head>
+{% block header %}
+    <h1>Cabeza</h1>
+{% end %}
 
-    <body>
+{% block body %}
         <table class="pure-table">
             <thead>
                 <tr>
                     <th>Hash</th>
                     <th>Date</th>
+                    <th>Original</th>
+                    <th>0</th>
+                    <th>1</th>
                 </tr>
             </thead>
             <tbody>
@@ -18,10 +20,13 @@
                     <tr>
                         <td>{{ image[0] }}</td>
                         <td>{{ image[1] }}</td>
+                        <td><a href="/api/v1/file/get/{{ image[0] }}.jpg">Image</a></td>
                     </tr>
                 {% end %}
             </tbody>
         </table>
-    </body
+{% end %}
 
-</html>
+{% block footer %}
+    <p>Pie</p>
+{% end %}
