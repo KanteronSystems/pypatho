@@ -73,24 +73,24 @@ class PostFileHandler(BaseHandler):
             output = open(path + '/' + hashresult + '.jpg', 'wb')
             output.write(file1['body'])
             output.close()
-            # Procesemos
-            image = io.imread(path + '/' + hashresult + '.jpg')
-            # UNO
-            if not os.path.exists(options.processedpath + '/1/' + hashresult[0:3]):
-                os.makedirs(options.processedpath + '/1/' + hashresult[0:3])
-                imagepro = processors.processhed(image, 1)
-                io.imsave(options.processedpath + '/1/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            # DOS
-            if not os.path.exists(options.processedpath + '/2/' + hashresult[0:3]):
-                os.makedirs(options.processedpath + '/2/' + hashresult[0:3])
-                imagepro = processors.processhed(image, 2)
-                io.imsave(options.processedpath + '/2/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            # TRES
-            if not os.path.exists(options.processedpath + '/3/' + hashresult[0:3]):
-                os.makedirs(options.processedpath + '/3/' + hashresult[0:3])
-                imagepro = processors.processhed(image, 3)
-                io.imsave(options.processedpath + '/3/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
-            # OMG, no tengo perdon de $DEITY
+            # # Procesemos
+            # image = io.imread(path + '/' + hashresult + '.jpg')
+            # # UNO
+            # if not os.path.exists(options.processedpath + '/1/' + hashresult[0:3]):
+            #     os.makedirs(options.processedpath + '/1/' + hashresult[0:3])
+            #     imagepro = processors.processhed(image, 1)
+            #     io.imsave(options.processedpath + '/1/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
+            # # DOS
+            # if not os.path.exists(options.processedpath + '/2/' + hashresult[0:3]):
+            #     os.makedirs(options.processedpath + '/2/' + hashresult[0:3])
+            #     imagepro = processors.processhed(image, 2)
+            #     io.imsave(options.processedpath + '/2/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
+            # # TRES
+            # if not os.path.exists(options.processedpath + '/3/' + hashresult[0:3]):
+            #     os.makedirs(options.processedpath + '/3/' + hashresult[0:3])
+            #     imagepro = processors.processhed(image, 3)
+            #     io.imsave(options.processedpath + '/3/' + hashresult[0:3] + '/' + hashresult + '.jpg', imagepro)
+            # # OMG, no tengo perdon de $DEITY
             cur = self.db.cursor()
             cur.execute("INSERT OR REPLACE INTO files VALUES(?,?,1)", (hashresult, datetime.datetime.now()));
             self.db.commit()
@@ -110,17 +110,27 @@ class GetFileHandler(BaseHandler):
 
 
 class ProcessFileHandler(BaseHandler):
-    def get(self, input):
-        algo = 1
-        path = options.processedpath + '/' + str(algo) 
-        fullpath = path + '/' + input[0:3] + '/' + input + '.jpg'
-        if os.path.exists(fullpath):
-            imagefile = open(fullpath, "r")
+    def get(self, process, filehash):
+        processedfile = options.processedpath + '/' + process + '/' + filehash[0:3] + '/' + filehash + '.jpg'
+        processedfilepath = options.processedpath + '/' + process + '/' + filehash[0:3]
+        originalfile = options.uploadpath + '/original/' + filehash[0:3] + '/' + filehash + '.jpg'
+
+        if os.path.exists(processedfile):
+            imagefile = open(processedfile, "r")
+            self.set_header("Content-Type", 'image/jpeg')
+            self.write(imagefile.read())
+            imagefile.close()
+        elif not os.path.exists(processedfile) and os.path.exists(originalfile):
+            if not os.path.exists(processedfilepath):
+                os.makedirs(processedfilepath)
+            processed = processors.processor(process, originalfile)
+            io.imsave(processedfile, processed)
+            imagefile = open(processedfile, "r")
             self.set_header("Content-Type", 'image/jpeg')
             self.write(imagefile.read())
             imagefile.close()
         else:
-            self.write('VAYA HOMBRE! ' + fullpath)
+            self.write('no existe' + originalfile)
 
 
 class ListImagesHandler(BaseHandler):
@@ -147,7 +157,7 @@ class Application(tornado.web.Application):
             # (r"/api/hash/check/(\w+)", HashHandler),
             (r"/api/v1/file/post", PostFileHandler),
             (r"/api/v1/file/get/([a-fA-F\d]{32}).jpg", GetFileHandler),
-            (r"/api/v1/file/process/1/([a-fA-F\d]{32}).jpg", ProcessFileHandler),
+            (r"/api/v1/file/process/([\d]{2})/([a-fA-F\d]{32}).jpg", ProcessFileHandler),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
