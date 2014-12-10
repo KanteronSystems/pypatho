@@ -1,0 +1,9 @@
+---
+# Testing manifest for BlueMix
+# Once pip fixes its bug, maybe, it'll work.
+applications:
+- name: pypatho-bluemix
+  host: pypatho-testing
+  memory: 256M
+  buildpack: https://github.com/joshuamckenty/buildpack-python
+  #https://github.com/cloudfoundry/python-buildpack
