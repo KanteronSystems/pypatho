@@ -10,8 +10,9 @@
                     <th>Hash</th>
                     <th>Date</th>
                     <th>Original</th>
-                    <th>0</th>
-                    <th>1</th>
+                    <th>01</th>
+                    <th>02</th>
+                    <th>03</th>
                 </tr>
             </thead>
             <tbody>
@@ -20,6 +21,9 @@
                         <td>{{ image[0] }}</td>
                         <td>{{ image[1] }}</td>
                         <td><a href="/api/v1/file/get/{{ image[0] }}.jpg">Image</a></td>
+                        <td><a href="/api/v1/file/process/01/{{ image[0] }}.jpg">01</a></td>
+                        <td><a href="/api/v1/file/process/02/{{ image[0] }}.jpg">02</a></td>
+                        <td><a href="/api/v1/file/process/03/{{ image[0] }}.jpg">03</a></td>
                     </tr>
                 {% end %}
             </tbody>
