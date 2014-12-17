@@ -6,9 +6,10 @@ import tornado.ioloop
 
 from skimage import io
 
+import pymongo
+
 import datetime
 import os
-import sqlite3
 import imghdr
 from hashlib import md5
 
@@ -21,21 +22,12 @@ import processors
 
 # Functions
 def isAlreadyThere(filehash):
-    cur = self.db.cursor()
-    cur.execute("SELECT * FROM files WHERE hash=:hash and written=1",
-        {"hash": filehash})
-    res = cur.fetchone()
-    if res is not None:
-        return 0
-    else:
-        return 1
+    pass
 
 
 # Handlers
 class BaseHandler(tornado.web.RequestHandler):
-    @property
-    def db(self):
-        return self.application.db
+    pass
 
 
 class HomeHandler(BaseHandler):
@@ -44,15 +36,17 @@ class HomeHandler(BaseHandler):
 
 
 class HashHandler(BaseHandler):
-    def get(self, input):
-        cur = self.db.cursor()
-        cur.execute("SELECT * FROM files WHERE hash=:hash and written=1",
-            {"hash": input})
-        res=cur.fetchone()
-        if res is not None:
-            self.write('NO') 
+    def get(self, filehash):
+        coll = self.application.mongodb.files
+        files_doc = coll.find_one({"_id": filehash})
+        if files_doc:
+            # Borramos la id para serializar?
+            # del files_doc["_id"]
+            # self.write(files_doc)
+            self.write("OK")
         else:
-            self.write('OK')
+            self.set_status(404)
+            self.write({"error": "Image not found!"})
 
 
 class PostFileHandler(BaseHandler):
@@ -73,9 +67,9 @@ class PostFileHandler(BaseHandler):
             output = open(path + '/' + hashresult + '.jpg', 'wb')
             output.write(file1['body'])
             output.close()
-            cur = self.db.cursor()
-            cur.execute("INSERT OR REPLACE INTO files VALUES(?,?,1)", (hashresult, datetime.datetime.now()));
-            self.db.commit()
+            coll = self.application.mongodb.files
+            files_doc = {'_id': hashresult, 'datetime': datetime.datetime.now()}
+            coll.insert(files_doc)
 
 
 class GetFileHandler(BaseHandler):
@@ -93,13 +87,13 @@ class GetFileHandler(BaseHandler):
 
 class ProcessFileHandler(BaseHandler):
     def get(self, process, filehash):
-        processedfile = options.processedpath + '/' + process + '/' + filehash[0:3] + '/' + filehash + '.jpg'
+        processedfile = options.processedpath + '/' + process + '/' + filehash[0:3] + '/' + filehash + '.png'
         processedfilepath = options.processedpath + '/' + process + '/' + filehash[0:3]
         originalfile = options.uploadpath + '/original/' + filehash[0:3] + '/' + filehash + '.jpg'
 
         if os.path.exists(processedfile):
             imagefile = open(processedfile, "r")
-            self.set_header("Content-Type", 'image/jpeg')
+            self.set_header("Content-Type", 'image/png')
             self.write(imagefile.read())
             imagefile.close()
         elif not os.path.exists(processedfile) and os.path.exists(originalfile):
@@ -108,7 +102,7 @@ class ProcessFileHandler(BaseHandler):
             processed = processors.processor(process, originalfile)
             io.imsave(processedfile, processed)
             imagefile = open(processedfile, "r")
-            self.set_header("Content-Type", 'image/jpeg')
+            self.set_header("Content-Type", 'image/png')
             self.write(imagefile.read())
             imagefile.close()
         else:
@@ -120,15 +114,13 @@ class ListImagesHandler(BaseHandler):
         page = int(page) if page else '0'
         pagination = 20
         pagebegin = page * pagination
-        # Vamos a ver ficheros de la base de datos"
-        cur = self.db.cursor()
-        cur.execute("SELECT hash,date FROM files WHERE written=1 LIMIT " + str(pagebegin) + "," + str(pagination))
-        res = cur.fetchall()
+        coll = self.application.mongodb.files
+        files_doc = coll.find().limit(pagination).skip(int(pagebegin))
         self.render(
             "list.html",
             title="Pypatho - Processed file list",
             # header = "Processed files",
-            images=res
+            images=files_doc
         )
 
 
@@ -142,7 +134,7 @@ class Application(tornado.web.Application):
             # (r"/api/hash/check/(\w+)", HashHandler),
             (r"/api/v1/file/post", PostFileHandler),
             (r"/api/v1/file/get/([a-fA-F\d]{32}).jpg", GetFileHandler),
-            (r"/api/v1/file/process/([\d]{2})/([a-fA-F\d]{32}).jpg", ProcessFileHandler),
+            (r"/api/v1/file/process/([\d]{2})/([a-fA-F\d]{32}).png", ProcessFileHandler),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -150,13 +142,13 @@ class Application(tornado.web.Application):
         )
         tornado.web.Application.__init__(self, handlers, **settings)
 
-        self.db = sqlite3.connect(options.database)
+        conn = pymongo.Connection(options.dburl)
+        self.mongodb = conn.pypatho
 
 
 def main():
     tornado.options.parse_command_line()
     print 'Serving on ' + str(options.port) + '...'
-    print 'Connecting to database ' + options.database
     # TODO Chequear que todas las rutas existen
     http_server = tornado.httpserver.HTTPServer(Application())
     http_server.listen(options.port)
