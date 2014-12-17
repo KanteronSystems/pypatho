@@ -3,6 +3,7 @@ six
 numpy
 scipy
 
+pymongo
 matplotlib
 tornado
 scikit-image
