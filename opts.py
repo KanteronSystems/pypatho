@@ -11,6 +11,8 @@ define("dburl", default="mongodb://testing:testing@ds027491.mongolab.com:27491/p
 define("database", default="process.db", help="Sqlite database to connect")
 define("hashdemo", default="78190a01d271953214c57f55c47f2749", help="File hash to test")
 
-# Rutas
-define("uploadpath", default="uploads", help="Where original file will be uploaded")
-define("processedpath", default="processed", help="Where processed files will be stored")
+#Object storage
+define("container_name", default="pypatho-test", help="Container where files get stored")
+define("endpoint", default="https://ams01.objectstorage.softlayer.net", help="Endpoint for your object storage")
+define("storageuser", default="", help="User for your object storage")
+define("storagekey", default="", help="Password for your object storage")

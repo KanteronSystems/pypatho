@@ -7,4 +7,5 @@ pymongo
 matplotlib
 tornado
 scikit-image
+#Necesario libjpeg-dev para poder leer jpeg
 pillow
