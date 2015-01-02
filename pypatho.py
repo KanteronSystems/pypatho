@@ -65,7 +65,7 @@ class PostFileHandler(BaseHandler):
         if imghdr.what(file1,file1['body']) != 'jpeg':
             self.write('No JPEG! BAD!')
         else:
-            self.write('JPEG! Very Good!' + hashresult)
+            self.write(hashresult)
 	    self.application.swift.put_object(container=options.container_name,
 		obj = hashresult + '.jpg',
 		contents = file1['body'],
