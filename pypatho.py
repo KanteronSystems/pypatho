@@ -6,7 +6,7 @@ import tornado.ioloop
 
 from swiftclient import Connection
 
-from PIL import Image
+# from PIL import Image
 
 from skimage import io
 
@@ -82,7 +82,9 @@ class GetFileHandler(BaseHandler):
         coll = self.application.mongodb.files
         files_doc = coll.find_one({"_id": filehash})
         if files_doc:
-            imagefile = self.application.swift.get_object(container=options.container_name, obj=filehash + '.jpg')[1]
+            imagefile = self.application.swift.get_object(
+                container=options.container_name,
+                obj=filehash + '.jpg')[1]
             self.set_header("Content-Type", 'image/jpeg')
             self.write(imagefile)
         else:
@@ -95,7 +97,9 @@ class ProcessFileHandler(BaseHandler):
         coll = self.application.mongodb.files
         files_doc = coll.find_one({"_id": filehash})
         if files_doc:
-            target = self.application.swift.get_object(container=options.container_name, obj=filehash + '.jpg')[1]
+            target = self.application.swift.get_object(
+                container=options.container_name,
+                obj=filehash + '.jpg')[1]
             processed = processors.processor(process, target)
             self.set_header("Content-Type", 'image/png')
             self.write(processed)
@@ -128,7 +132,8 @@ class Application(tornado.web.Application):
             # (r"/api/hash/check/(\w+)", HashHandler),
             (r"/api/v1/file/post", PostFileHandler),
             (r"/api/v1/file/get/([a-fA-F\d]{32}).jpg", GetFileHandler),
-            (r"/api/v1/file/process/([\d]{2})/([a-fA-F\d]{32}).png", ProcessFileHandler),
+            (r"/api/v1/file/process/([\d]{2})/([a-fA-F\d]{32}).png",
+             ProcessFileHandler),
             (r"/testing/", TestingHandler),
         ]
         settings = dict(
