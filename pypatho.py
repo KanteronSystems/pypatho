@@ -1,3 +1,6 @@
+"""Pathology image analizer webservice
+by Alvaro G."""
+
 from tornado.options import options
 import tornado.web
 import tornado.gen
@@ -31,19 +34,23 @@ import processors
 
 # Handlers
 class BaseHandler(tornado.web.RequestHandler):
+    """Base handler for all other methods"""
     pass
 
 
 class TestingHandler(BaseHandler):
+    """Fake testing handler, probably will get deleted"""
     pass
 
 
 class HomeHandler(BaseHandler):
+    """Serves the home page"""
     def get(self):
         self.render("index.html")
 
 
 class HashHandler(BaseHandler):
+    """Check the existence of a certain file on the database, via its hash"""
     def get(self, filehash):
         coll = self.application.mongodb.files
         files_doc = coll.find_one({"_id": filehash})
@@ -58,6 +65,7 @@ class HashHandler(BaseHandler):
 
 
 class PostFileHandler(BaseHandler):
+    """Receives a file via POST method"""
     def post(self):
         # Pending use of apikey
         # apikey = self.get_argument('apikey')
@@ -79,6 +87,7 @@ class PostFileHandler(BaseHandler):
 
 
 class GetFileHandler(BaseHandler):
+    """Serves file via a GET method"""
     def get(self, filehash):
         coll = self.application.mongodb.files
         files_doc = coll.find_one({"_id": filehash})
@@ -93,6 +102,7 @@ class GetFileHandler(BaseHandler):
 
 
 class ProcessFileHandler(BaseHandler):
+    """Asks for processing certain file"""
     def get(self, process, filehash):
         # TODO: Guardar los PNG procesados y 'avisar' a la base de datos
         coll = self.application.mongodb.files
@@ -109,6 +119,7 @@ class ProcessFileHandler(BaseHandler):
 
 
 class ListImagesHandler(BaseHandler):
+    """List images in database"""
     def get(self, page):
         page = int(page) if page else '0'
         pagination = 20
@@ -125,6 +136,7 @@ class ListImagesHandler(BaseHandler):
 
 # App
 class Application(tornado.web.Application):
+    """Application initialization"""
     def __init__(self):
         handlers = [
             (r"/", HomeHandler),
@@ -155,6 +167,7 @@ class Application(tornado.web.Application):
 
 
 def main():
+    """Main thread"""
     tornado.options.parse_command_line()
     print 'Serving on ' + str(options.port) + '...'
     # TODO Chequear que todas las rutas existen
