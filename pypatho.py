@@ -6,9 +6,9 @@ import tornado.ioloop
 
 from swiftclient import Connection
 
+# Sin usar ?
 # from PIL import Image
-
-from skimage import io
+# from skimage import io
 
 import pymongo
 
@@ -25,8 +25,8 @@ import processors
 
 
 # Functions
-def isAlreadyThere(filehash):
-    pass
+# def isalreadythere(filehash):
+#     pass
 
 
 # Handlers
@@ -73,7 +73,8 @@ class PostFileHandler(BaseHandler):
                                               contents=file1['body'],
                                               content_type='image/jpeg')
             coll = self.application.mongodb.files
-            files_doc = {'_id': hashresult, 'datetime': datetime.datetime.now()}
+            files_doc = {'_id': hashresult,
+                         'datetime': datetime.datetime.now()}
             coll.insert(files_doc)
 
 
