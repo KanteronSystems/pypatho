@@ -5,6 +5,7 @@ from datetime import datetime
 
 
 def main():
+    """Main"""
     database = 'process.db'
     # con = None
 
