@@ -33,8 +33,10 @@ def isAlreadyThere(filehash):
 class BaseHandler(tornado.web.RequestHandler):
     pass
 
+
 class TestingHandler(BaseHandler):
     pass
+
 
 class HomeHandler(BaseHandler):
     def get(self):
@@ -62,14 +64,14 @@ class PostFileHandler(BaseHandler):
         file1 = self.request.files['file1'][0]
         # original_fname = file1['filename']
         hashresult = md5(file1['body']).hexdigest()
-        if imghdr.what(file1,file1['body']) != 'jpeg':
+        if imghdr.what(file1, file1['body']) != 'jpeg':
             self.write('No JPEG! BAD!')
         else:
             self.write(hashresult)
-	    self.application.swift.put_object(container=options.container_name,
-		obj = hashresult + '.jpg',
-		contents = file1['body'],
-		content_type = 'image/jpeg')
+            self.application.swift.put_object(container=options.container_name,
+                                              obj=hashresult + '.jpg',
+                                              contents=file1['body'],
+                                              content_type='image/jpeg')
             coll = self.application.mongodb.files
             files_doc = {'_id': hashresult, 'datetime': datetime.datetime.now()}
             coll.insert(files_doc)
@@ -80,27 +82,26 @@ class GetFileHandler(BaseHandler):
         coll = self.application.mongodb.files
         files_doc = coll.find_one({"_id": filehash})
         if files_doc:
-	    imagefile = self.application.swift.get_object(container=options.container_name, obj=filehash + '.jpg')[1]
+            imagefile = self.application.swift.get_object(container=options.container_name, obj=filehash + '.jpg')[1]
             self.set_header("Content-Type", 'image/jpeg')
-	    self.write(imagefile)
+            self.write(imagefile)
         else:
             self.write('MAAAAL')
 
 
 class ProcessFileHandler(BaseHandler):
     def get(self, process, filehash):
-	# TODO: Guardar los PNG procesados y 'avisar' a la base de datos
-	coll = self.application.mongodb.files
+        # TODO: Guardar los PNG procesados y 'avisar' a la base de datos
+        coll = self.application.mongodb.files
         files_doc = coll.find_one({"_id": filehash})
         if files_doc:
-    	    target = self.application.swift.get_object(container=options.container_name, obj=filehash + '.jpg')[1]
-	    processed = processors.processor(process, target)
-	    self.set_header("Content-Type", 'image/png')
-	    self.write(processed)
-	else:
+            target = self.application.swift.get_object(container=options.container_name, obj=filehash + '.jpg')[1]
+            processed = processors.processor(process, target)
+            self.set_header("Content-Type", 'image/png')
+            self.write(processed)
+        else:
             self.write('no existe' + filehash)
 
-	    
 
 class ListImagesHandler(BaseHandler):
     def get(self, page):
@@ -128,7 +129,7 @@ class Application(tornado.web.Application):
             (r"/api/v1/file/post", PostFileHandler),
             (r"/api/v1/file/get/([a-fA-F\d]{32}).jpg", GetFileHandler),
             (r"/api/v1/file/process/([\d]{2})/([a-fA-F\d]{32}).png", ProcessFileHandler),
-	    (r"/testing/", TestingHandler),
+            (r"/testing/", TestingHandler),
         ]
         settings = dict(
             template_path=os.path.join(os.path.dirname(__file__), "templates"),
@@ -139,12 +140,12 @@ class Application(tornado.web.Application):
         conn = pymongo.Connection(options.dburl)
         self.mongodb = conn.pypatho
 
-	self.swift = Connection(
-                authurl=options.endpoint + "/auth/v1.0",
-                user=options.storageuser,
-                key=options.storagekey,
-                auth_version="1",
-                insecure=True)
+        self.swift = Connection(
+            authurl=options.endpoint + "/auth/v1.0",
+            user=options.storageuser,
+            key=options.storagekey,
+            auth_version="1",
+            insecure=True)
 
 
 def main():
@@ -157,4 +158,4 @@ def main():
 
 
 if __name__ == "__main__":
-        main()
+    main()
