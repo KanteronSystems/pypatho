@@ -1,3 +1,4 @@
+"""Database testing tool"""
 import sqlite3
 from hashlib import md5
 from datetime import datetime
@@ -7,22 +8,20 @@ con = None
 
 filetohash='resources/pato.png'
 
-#Connection is mine
+# Connection is mine
 con = sqlite3.connect(database)
 cur = con.cursor()
 
-#Read Hash
-file=open(filetohash, 'rb')
-filecontent=file.read()
+# Read Hash
+fileopen=open(filetohash, 'rb')
+filecontent=fileopen.read()
 hashresult=md5(filecontent).hexdigest()
-file.close()
+fileopen.close()
 
-#Inserta
+# Inserta
 cur.execute("REPLACE INTO files VALUES(:hash,:date,1)",
     {"hash": hashresult, "date": datetime.now()})
 con.commit()
 
-
-
-#Adieu
+# Adieu
 con.close()

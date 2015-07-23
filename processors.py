@@ -1,8 +1,9 @@
-from skimage import io
+"""Image processor methods"""
+# from skimage import io
 from skimage.color import rgb2hed
 from skimage.exposure import rescale_intensity
 
-from PIL import Image
+# from PIL import Image
 
 import matplotlib.pyplot as plt
 
@@ -13,22 +14,27 @@ import StringIO
 
 
 def processor(process, originalfile):
+    """Main processor caller"""
     # TODO Make a process number 'if' loop when we have different processes
     result = processhed(originalfile, process)
     return result
 
 
 def processhed(imagefile, algorithm):
+    """Process images with different algorithms"""
     image = plt.imread(StringIO.StringIO(imagefile), format="JPG")
- 
+
     ihc_hed = rgb2hed(image)
 
     if algorithm == '01':
-        result = plt.cm.gray(rescale_intensity(ihc_hed[:, :, 0], out_range=(0, 1)))
+        result = plt.cm.gray(rescale_intensity(ihc_hed[:, :, 0],
+                                               out_range=(0, 1)))
     elif algorithm == '02':
-        result = plt.cm.gray(rescale_intensity(ihc_hed[:, :, 1], out_range=(0, 1)))
+        result = plt.cm.gray(rescale_intensity(ihc_hed[:, :, 1],
+                                               out_range=(0, 1)))
     elif algorithm == '03':
-        result = plt.cm.gray(rescale_intensity(ihc_hed[:, :, 2], out_range=(0, 1)))
+        result = plt.cm.gray(rescale_intensity(ihc_hed[:, :, 2],
+                                               out_range=(0, 1)))
     else:
         result = image
 

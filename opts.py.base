@@ -1,14 +1,22 @@
+"""Configuration and options setup file"""
 from tornado.options import options, define
 
 # Networking
-define("port", default=8080, help="Port to run the server")
+define("port", default=8080,
+       help="Port to run the server")
 
 # Database Framework
-define("dbengine", default="mongodb", help="Database engine used to store information")
-define("dburl", default="mongodb://user:pass@url:port/database", help="Database url to connect")
+define("dbengine", default="mongodb",
+       help="Database engine used to store information")
+define("dburl", default="mongodb://user:pass@url:port/database",
+       help="Database url to connect")
 
 #Object storage
-define("container_name", default="container-name", help="Container where files get stored")
-define("endpoint", default="https://endpoint-url", help="Endpoint for your object storage")
-define("storageuser", default="storageuser", help="User for your object storage")
-define("storagekey", default="storagekey", help="Password for your object storage")
+define("container_name", default="container-name",
+       help="Container where files get stored")
+define("endpoint", default="https://endpoint-url",
+       help="Endpoint for your object storage")
+define("storageuser", default="storageuser",
+       help="User for your object storage")
+define("storagekey", default="storagekey",
+       help="Password for your object storage")
