@@ -9,3 +9,6 @@ tornado
 scikit-image
 #Necesario libjpeg-dev para poder leer jpeg
 pillow
+
+#Y almacenamiento de objetos
+swiftclient
