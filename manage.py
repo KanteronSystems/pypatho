@@ -3,25 +3,31 @@ import sqlite3
 from hashlib import md5
 from datetime import datetime
 
-database = 'process.db'
-con = None
 
-filetohash='resources/pato.png'
+def main():
+    database = 'process.db'
+    # con = None
 
-# Connection is mine
-con = sqlite3.connect(database)
-cur = con.cursor()
+    filetohash = 'resources/pato.png'
 
-# Read Hash
-fileopen=open(filetohash, 'rb')
-filecontent=fileopen.read()
-hashresult=md5(filecontent).hexdigest()
-fileopen.close()
+    # Connection is mine
+    con = sqlite3.connect(database)
+    cur = con.cursor()
 
-# Inserta
-cur.execute("REPLACE INTO files VALUES(:hash,:date,1)",
-    {"hash": hashresult, "date": datetime.now()})
-con.commit()
+    # Read Hash
+    fileopen = open(filetohash, 'rb')
+    filecontent = fileopen.read()
+    hashresult = md5(filecontent).hexdigest()
+    fileopen.close()
 
-# Adieu
-con.close()
+    # Inserta
+    cur.execute("REPLACE INTO files VALUES(:hash,:date,1)",
+                {"hash": hashresult, "date": datetime.now()})
+    con.commit()
+
+    # Adieu
+    con.close()
+
+
+if __name__ == "__main__":
+    main()
